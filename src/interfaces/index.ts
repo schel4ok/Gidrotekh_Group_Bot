@@ -17,6 +17,7 @@ export interface UserContactsInput {
 
 interface IBotSession {
     status: 'READY' | 'AWAITING_USER_CONTACTS';
+    steps: string[];
 }
 
 export interface BotWithSession extends Context {

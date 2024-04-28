@@ -17,27 +17,27 @@
     "select_consultant_type": {
         "message": "Выберите тип оборудования по которому вы хотите получить консультацию.",
         "buttons": {
-            "Гидравлическое оборудование": "generic_answer",
-            "Механические приводы": "generic_answer",
-            "Электроника": "generic_answer",
-            "Разработка систем управления, ПО": "generic_answer"
+            "Гидравлическое оборудование": "finish",
+            "Механические приводы": "finish",
+            "Электроника": "finish",
+            "Разработка систем управления, ПО": "finish"
         }
     },
     "select_mechanic_subtype": {
         "message": "Выберите тип подтип механического привода который вас интересует",
         "buttons": {
-            "Муфты подключения насоса к двигателю": "generic_answer",
-            "Редукторы": "generic_answer",
-            "Карданные валы": "generic_answer"
+            "Муфты подключения насоса к двигателю": "finish",
+            "Редукторы": "finish",
+            "Карданные валы": "finish"
         }
     },
     "select_electronics_subtype": {
         "message": "Выберите тип подтип электроники который вас интересует",
         "buttons": {
-            "Дисплеи": "generic_answer",
-            "Контроллеры": "generic_answer",
-            "Педали": "generic_answer",
-            "Джойстики": "generic_answer"
+            "Дисплеи": "finish",
+            "Контроллеры": "finish",
+            "Педали": "finish",
+            "Джойстики": "finish"
         }
     },
     "select_hydraulic_subtype": {
@@ -46,42 +46,42 @@
             "Гидрораспределители": "select_hydraulic_distributor",
             "Насосы": "select_hydraulic_pump",
             "Моторы": "select_hydraulic_motor",
-            "Клапанная аппаратура": "generic_answer"
+            "Клапанная аппаратура": "finish"
         }
     },
     "select_hydraulic_distributor": {
         "message": "Уточните, какой именно гидрораспределитель вас интересует",
         "buttons": {
-            "Пропорциональный секционный распределитель": "generic_answer",
-            "Секционный распределитель": "generic_answer",
-            "Моноблочный распределитель": "generic_answer"
+            "Пропорциональный секционный распределитель": "finish",
+            "Секционный распределитель": "finish",
+            "Моноблочный распределитель": "finish"
         }
     },
     "select_hydraulic_motor": {
         "message": "Уточните, какой именно мотор вас интересует",
         "buttons": {
-            "Героторный": "generic_answer",
-            "Аксиально-поршневой": "generic_answer",
-            "Радиально-поршневой": "generic_answer",
-            "Шестеренный": "generic_answer"
+            "Героторный": "finish",
+            "Аксиально-поршневой": "finish",
+            "Радиально-поршневой": "finish",
+            "Шестеренный": "finish"
         }
     },
     "select_hydraulic_pump": {
         "message": "Уточните, какой именно насос вас интересует",
         "buttons": {
             "Аксиально-поршневой": "select_axial_pump",
-            "Шестеренный": "generic_answer",
-            "Пластинчатый": "generic_answer"
+            "Шестеренный": "finish",
+            "Пластинчатый": "finish"
         }
     },
     "select_axial_pump": {
         "message": "Уточните, какой конкретно аксиально-поршневой насос вам нужен",
         "buttons": {
-            "Регулируемый": "generic_answer",
-            "Нерегулируемый": "generic_answer"
+            "Регулируемый": "finish",
+            "Нерегулируемый": "finish"
         }
     },
-    "generic_answer": {
+    "finish": {
         "message": "Благодарим Вас за обращение, передаю ваш запрос в работу менеджеру. Мы с вами свяжемся в ближайшее время. Также вы можете самостоятельно связаться с менеджером по телефону +7 (499) 341-73-72, либо по электронной почте dsk@gidrotekh.com.",
         "buttons": {
             "Вернуться": "start"
