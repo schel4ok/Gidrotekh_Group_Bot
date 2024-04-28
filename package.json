@@ -1,10 +1,15 @@
 {
   "dependencies": {
+    "dotenv": "^16.4.5",
     "init": "^0.1.2",
     "telegraf": "^4.16.3"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
     "typescript": "^5.4.5"
+  },
+  "scripts": {
+    "build": "tsc && mkdir -p dist/data && cp src/data/*.json dist/data/",
+    "start": "node dist/bot.js"
   }
 }

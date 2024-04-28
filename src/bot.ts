@@ -1,31 +1,40 @@
 import { Telegraf } from 'telegraf';
-import { BotFlow, BotNode } from './interfaces';
+import { BotFlow, BotNode } from './interfaces/interfaces';
 import { loadJsonData } from './utils/loadData';
 import { getKeyboard } from './utils/getKeyboard';
+import 'dotenv/config';
+import path from 'path';
 
 const bot = new Telegraf(process.env.TELEGRAM_TOKEN ?? 'badtoken');
 
 async function setupBot() {
     try {
-        const dataFlow: BotFlow = await loadJsonData('./flowData.json');
-
+        const dataPath = path.join(__dirname, 'data', 'data.json');
+        const dataFlow: BotFlow = await loadJsonData(dataPath);
+        console.log(dataFlow['start'])
         bot.start(
             (ctx) => {
-                const isSpecial = true;
+                const isSpecial = false;
                 let startFlow: BotNode;
-
+                console.log('Start init');
                 if (isSpecial) {
                     startFlow = dataFlow['special'];
+                    console.log('start flow special block');
                 }
                 else {
                     startFlow = dataFlow['start'];
+                    console.log('start flow normal start block')
                 }
-
+                console.log('before err check');
                 if (!startFlow)
                     throw new Error('Could not find the starter node!');
+                console.log('before reply'); console.log(startFlow)
 
                 // Setup message
-                ctx.reply(startFlow.message, getKeyboard(startFlow.buttons));
+                if (!startFlow.buttons)
+                    ctx.reply(startFlow.message);
+                else
+                    ctx.reply(startFlow.message, getKeyboard(startFlow.buttons));
             });
 
         // Setup buttons
