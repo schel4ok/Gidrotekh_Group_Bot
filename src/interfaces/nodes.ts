@@ -17,6 +17,7 @@ interface IBotFlow {
     nodes: IBotNode[];
     getNodeById: (nodeId: string) => IBotNode | undefined;
     getBtnById: (btnId: string) => IBotNodeBtn | undefined;
+    getAllBtns: () => IBotNodeBtn[];
 }
 
 export class BotNodeBtn implements IBotNodeBtn {
@@ -67,8 +68,8 @@ export class BotFlow implements IBotFlow {
         return this.nodes.find(node => node.id === nodeId);
     };
 
-    getBtnById = (btnId: string): IBotNodeBtn | undefined => {
-        const buttons = this.nodes.reduce<IBotNodeBtn[]>(
+    getAllBtns = (): IBotNodeBtn[] => {
+        return this.nodes.reduce<IBotNodeBtn[]>(
             (btnsArr, node) => {
                 // If there are buttons in the node, add them to the array
                 if (node.buttons)
@@ -77,6 +78,10 @@ export class BotFlow implements IBotFlow {
                 return btnsArr;
             }, []
         );
+    }
+
+    getBtnById = (btnId: string): IBotNodeBtn | undefined => {
+        const buttons = this.getAllBtns();
 
         return buttons.find(btn => btn.id === btnId);
     };
