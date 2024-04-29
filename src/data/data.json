@@ -1,93 +1,237 @@
-{
-    "start": {
+[
+    {
+        "id": "START",
         "message": "Добро пожаловать, я чат-бот компании “Гидротех Групп”. Мы является одним из крупнейших поставщиков оборудования высочайшего уровня на российский рынок, являясь надежным партнером в области поставок комплектующих для рынка сельскохозяйственной, дорожно-строительной, коммунальной и прочей техники. Наши главные преимущества — выбор только высококлассных компонентов и его прямые поставки.\nКроме этого, мы так же разрабатываем собственные решения для мобильной техники и насосных станций, где применяем самые надежные разработки и компоненты лучших мировых и российских производителей. Наша цель — предлагать решения высокого уровня для уникальных машин и установок, которые могут конкурировать с иностранными аналогами.\nЧем мы можем я могу быть Вам полезен?",
-        "buttons": {
-            "Хочу купить оборудование": "select_equipment_type",
-            "Хочу получить техническую консультацию": "select_consultant_type"
-        }
+        "buttons": [
+            {
+                "id": "START:01",
+                "label": "Хочу купить оборудование",
+                "targetNodeId": "SELECT_EQUIPMENT_TYPE"
+            },
+            {
+                "id": "START:02",
+                "label": "Хочу получить техническую консультацию",
+                "targetNodeId": "SELECT_CONSULTANT_TYPE"
+            }
+        ]
     },
-    "select_equipment_type": {
+    {
+        "id": "SELECT_EQUIPMENT_TYPE",
         "message": "Выберите тип оборудования который вас интересует.",
-        "buttons": {
-            "Гидравлическое оборудование": "select_hydraulic_subtype",
-            "Механические приводы": "select_mechanic_subtype",
-            "Электроника": "select_electronics_subtype"
-        }
+        "buttons": [
+            {
+                "id": "SELECT_EQUIPMENT_TYPE:01",
+                "label": "Гидравлическое оборудование",
+                "targetNodeId": "select_hydraulic_subtype"
+            },
+            {
+                "id": "SELECT_EQUIPMENT_TYPE:02",
+                "label": "Механические приводы",
+                "targetNodeId": "select_mechanic_subtype"
+            },
+            {
+                "id": "SELECT_EQUIPMENT_TYPE:03",
+                "label": "Электроника",
+                "targetNodeId": "select_electronics_subtype"
+            }
+        ]
     },
-    "select_consultant_type": {
+    {
+        "id": "SELECT_CONSULTANT_TYPE",
         "message": "Выберите тип оборудования по которому вы хотите получить консультацию.",
-        "buttons": {
-            "Гидравлическое оборудование": "finish",
-            "Механические приводы": "finish",
-            "Электроника": "finish",
-            "Разработка систем управления, ПО": "finish"
-        }
+        "buttons": [
+            {
+                "id": "SELECT_CONSULTANT_TYPE:01",
+                "label": "Гидравлическое оборудование",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_CONSULTANT_TYPE:02",
+                "label": "Механические приводы",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_CONSULTANT_TYPE:03",
+                "label": "Электроника",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_CONSULTANT_TYPE:04",
+                "label": "Разработка систем управления, ПО",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_mechanic_subtype": {
-        "message": "Выберите тип подтип механического привода который вас интересует",
-        "buttons": {
-            "Муфты подключения насоса к двигателю": "finish",
-            "Редукторы": "finish",
-            "Карданные валы": "finish"
-        }
+    {
+        "id": "SELECT_MECHANIC_SUBTYPE",
+        "message": "Выберите тип подтип механического привода который вас интересует.",
+        "buttons": [
+            {
+                "id": "SELECT_MECHANIC_SUBTYPE:01",
+                "label": "Муфты подключения насоса к двигателю",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_MECHANIC_SUBTYPE:02",
+                "label": "Редукторы",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_MECHANIC_SUBTYPE:03",
+                "label": "Карданные валы",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_electronics_subtype": {
-        "message": "Выберите тип подтип электроники который вас интересует",
-        "buttons": {
-            "Дисплеи": "finish",
-            "Контроллеры": "finish",
-            "Педали": "finish",
-            "Джойстики": "finish"
-        }
+    {
+        "id": "SELECT_ELECTRONICS_SUBTYPE",
+        "message": "Выберите тип подтип электроники который вас интересует.",
+        "buttons": [
+            {
+                "id": "SELECT_ELECTRONICS_SUBTYPE:01",
+                "label": "Дисплеи",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_ELECTRONICS_SUBTYPE:02",
+                "label": "Контроллеры",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_ELECTRONICS_SUBTYPE:03",
+                "label": "Педали",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_ELECTRONICS_SUBTYPE:04",
+                "label": "Джойстики",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_hydraulic_subtype": {
-        "message": "Выберите тип подтип гидравлического оборудования который вас интересует",
-        "buttons": {
-            "Гидрораспределители": "select_hydraulic_distributor",
-            "Насосы": "select_hydraulic_pump",
-            "Моторы": "select_hydraulic_motor",
-            "Клапанная аппаратура": "finish"
-        }
+    {
+        "id": "SELECT_HYDRAULIC_SUBTYPE",
+        "message": "Выберите тип подтип гидравлического оборудования который вас интересует.",
+        "buttons": [
+            {
+                "id": "SELECT_HYDRAULIC_SUBTYPE:01",
+                "label": "Гидрораспределители",
+                "targetNodeId": "SELECT_HYDRAULIC_DISTRIBUTOR"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_SUBTYPE:02",
+                "label": "Насосы",
+                "targetNodeId": "SELECT_HYDRAULIC_PUMP"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_SUBTYPE:03",
+                "label": "Моторы",
+                "targetNodeId": "SELECT_HYDRAULIC_MOTOR"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_SUBTYPE:04",
+                "label": "Клапанная аппаратура",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_hydraulic_distributor": {
-        "message": "Уточните, какой именно гидрораспределитель вас интересует",
-        "buttons": {
-            "Пропорциональный секционный распределитель": "finish",
-            "Секционный распределитель": "finish",
-            "Моноблочный распределитель": "finish"
-        }
+    {
+        "id": "SELECT_HYDRAULIC_DISTRIBUTOR",
+        "message": "Уточните, какой именно гидрораспределитель вас интересует.",
+        "buttons": [
+            {
+                "id": "SELECT_HYDRAULIC_DISTRIBUTOR:01",
+                "label": "Пропорциональный секционный распределитель",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_DISTRIBUTOR:02",
+                "label": "Секционный распределитель",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_DISTRIBUTOR:03",
+                "label": "Моноблочный распределитель",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_hydraulic_motor": {
-        "message": "Уточните, какой именно мотор вас интересует",
-        "buttons": {
-            "Героторный": "finish",
-            "Аксиально-поршневой": "finish",
-            "Радиально-поршневой": "finish",
-            "Шестеренный": "finish"
-        }
+    {
+        "id": "SELECT_HYDRAULIC_MOTOR",
+        "message": "Уточните, какой именно мотор вас интересует.",
+        "buttons": [
+            {
+                "id": "SELECT_HYDRAULIC_MOTOR:01",
+                "label": "Героторный",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_MOTOR:02",
+                "label": "Аксиально-поршневой",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_MOTOR:03",
+                "label": "Радиально-поршневой",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_MOTOR:04",
+                "label": "Шестеренный",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_hydraulic_pump": {
-        "message": "Уточните, какой именно насос вас интересует",
-        "buttons": {
-            "Аксиально-поршневой": "select_axial_pump",
-            "Шестеренный": "finish",
-            "Пластинчатый": "finish"
-        }
+    {
+        "id": "SELECT_HYDRAULIC_PUMP",
+        "message": "Уточните, какой именно насос вас интересует.",
+        "buttons": [
+            {
+                "id": "SELECT_HYDRAULIC_PUMP:01",
+                "label": "Аксиально-поршневой",
+                "targetNodeId": "SELECT_AXIAL_PUMP"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_PUMP:02",
+                "label": "Шестеренный",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_HYDRAULIC_PUMP:03",
+                "label": "Пластинчатый",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "select_axial_pump": {
-        "message": "Уточните, какой конкретно аксиально-поршневой насос вам нужен",
-        "buttons": {
-            "Регулируемый": "finish",
-            "Нерегулируемый": "finish"
-        }
+    {
+        "id": "SELECT_AXIAL_PUMP",
+        "message": "Уточните, какой конкретно аксиально-поршневой насос вам нужен.",
+        "buttons": [
+            {
+                "id": "SELECT_AXIAL_PUMP:01",
+                "label": "Регулируемый",
+                "targetNodeId": "FINISH"
+            },
+            {
+                "id": "SELECT_AXIAL_PUMP:02",
+                "label": "Нерегулируемый",
+                "targetNodeId": "FINISH"
+            }
+        ]
     },
-    "finish": {
+    {
+        "id": "FINISH",
         "message": "Благодарим Вас за обращение, передаю ваш запрос в работу менеджеру. Мы с вами свяжемся в ближайшее время. Также вы можете самостоятельно связаться с менеджером по телефону +7 (499) 341-73-72, либо по электронной почте dsk@gidrotekh.com.",
-        "buttons": {
-            "Вернуться": "start"
-        }
+        "buttons": [
+            {
+                "id": "FINISH:01",
+                "label": "Вернуться",
+                "targetNodeId": "START"
+            }
+        ]
     },
-    "special": {
+    {
+        "id": "SPECIAL",
         "message": "Благодарим Вас за посещения нашего стенда на выставке СТТ-2024. Ниже вы можете найти контактную информацию наших менеджеров.\nДмитрий Кузнецов +7********, email: dsk@gidrotekh.com\nАртём Гурин +7********, email: gidrotekh.com\nАлексей Крупенко +7********, email: ******@gidrotekh.com\nТакже будем признательны, если вы оставите контактную информацию, чтобы мы могли связаться с вами после выставки. Напишите пожалуйста ваше ФИО, название компании и номер телефона. Хорошего вам дня!"
     }
-}
+]
