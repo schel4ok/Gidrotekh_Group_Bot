@@ -1,14 +1,16 @@
 import { Telegraf } from 'telegraf';
 import path from 'path';
 import 'dotenv/config';
+import 'reflect-metadata'
 import LocalSession from 'telegraf-session-local';
-import { BotFlow, BotNode, BotWithSession } from './interfaces';
+import { IBotWithSession, BotNode } from './interfaces';
 import { loadJsonData } from './utils/loadData';
 import { getKeyboard } from './utils/getKeyboard';
-import { validateContacts } from './utils/validateConctacts';
+import { validateNodeFlow } from './utils/validateNodes';
+import { createContactsInput, validateContactsInput } from './utils/validateConctacts';
 
 // Initialize the bot
-const bot = new Telegraf<BotWithSession>(process.env.TELEGRAM_TOKEN ?? 'badtoken');
+const bot = new Telegraf<IBotWithSession>(process.env.TELEGRAM_TOKEN ?? 'badtoken');
 
 // Enable session support
 const localSession = new LocalSession();
@@ -17,10 +19,11 @@ bot.use(localSession.middleware());
 async function setupBot(parentChatId: number) {
     try {
         const parentChannel = parentChatId;
+
         const dataPath = path.join(__dirname, 'data', 'data.json');
-        const dataFlow: BotFlow = await loadJsonData(dataPath);
-        const answers = Object.values(dataFlow).filter(node => node.buttons);
-        // console.log(answers);
+        const data = await loadJsonData(dataPath);
+
+        const nodeFlow = await validateNodeFlow(data);
 
         bot.start(
             (ctx) => {
@@ -29,59 +32,61 @@ async function setupBot(parentChatId: number) {
                     new Date('2024-05-28'),
                     new Date('2024-05-31')
                 ];
-                let startFlow: BotNode;
                 const currentDate = new Date();
-                // Set initial status
+
+                // Prepare the node variable 
+                let startNode: BotNode | undefined;
+
+                // Set initial session state
                 ctx.session = { status: 'READY', steps: [] };
 
                 // If user starts conversation during the special period
                 if (currentDate >= specialPeriod[0] && currentDate <= specialPeriod[1]) {
-                    startFlow = dataFlow['special'];
+                    startNode = nodeFlow.getNodeById('SPECIAL');
                     // Change the status
                     ctx.session.status = 'AWAITING_USER_CONTACTS';
                 }
                 else {
-                    startFlow = dataFlow['start'];
+                    startNode = nodeFlow.getNodeById('START');
                 }
 
-                if (!startFlow || !startFlow.message)
-                    throw new Error('Could not find the starter node!');
+                if (!startNode)
+                    throw new Error('Стартовый нод не обнаружен!');
 
-                // Setup message
-                if (!startFlow.buttons)
-                    ctx.reply(startFlow.message);
-                else
-                    ctx.reply(startFlow.message, getKeyboard(startFlow.buttons));
+                // Send start message based on the presence of the buttons
+                ctx.reply(startNode.message, startNode.buttons ? getKeyboard(startNode.buttons) : undefined);
             });
 
-        // Setup button listeners to react to btn plates
-        Object
-            .entries(dataFlow)
-            .forEach(
-                (
-                    ([nodeKey, nodeValue]) => {
-                        bot.action(nodeKey, (ctx) => {
-                            console.log('Node key - ', nodeKey);
-                            // Add user choice to the history (skip return to the start)
-                            if (nodeKey !== 'start' && nodeKey !== 'finish')
-                                ctx.session!.steps.push(nodeKey);
-
-                            if (nodeKey === 'finish') {
-                                // Send the message
-                                ctx.telegram.sendMessage(
-                                    parentChannel,
-                                    `Поступил запрос от @${ctx.from.username}(id:${ctx.from.id}) по ${ctx.session!.steps.join(' > ')}`
-                                )
-                                // Clear the story
-                                ctx.session!.steps = [];
-                            }
-
-                            // Update the message
-                            ctx.editMessageText(nodeValue.message, getKeyboard(nodeValue.buttons));
-                        });
+        // SETUP BTN CALLBACK LISTENERS
+        nodeFlow.getAllBtns().forEach(
+            ({ id, label, targetNodeId }) => {
+                // Subscribe to button id's (buttons emit their id's)
+                bot.action(id, (ctx) => {
+                    // Add selected option to the session steps (skipping return)
+                    if (targetNodeId !== 'START') {
+                        ctx.session!.steps.push(label);
                     }
-                )
-            );
+
+                    // Send the user steps to the parent channel in the end
+                    if (targetNodeId === 'FINISH') {
+                        // Send the message
+                        ctx.telegram.sendMessage(
+                            parentChannel,
+                            `Поступил запрос от @${ctx.from.username}[id:${ctx.from.id}] по [${ctx.session!.steps.join(' > ')}] ${new Date().toLocaleString()}`
+                        )
+                        // Clear the story
+                        ctx.session!.steps = [];
+                    }
+
+                    // Update the message if there is next node
+                    const nextNode = nodeFlow.getNodeById(targetNodeId);
+
+                    if (nextNode) {
+                        ctx.editMessageText(nextNode.message, nextNode.buttons ? getKeyboard(nextNode.buttons) : undefined);
+                    }
+                })
+            }
+        )
 
         // Add user input listener
         bot.use(async (ctx, next) => {
@@ -90,15 +95,15 @@ async function setupBot(parentChatId: number) {
 
             switch (ctx.session.status) {
                 case 'AWAITING_USER_CONTACTS':
-                    const validInput = validateContacts(ctx.message.text);
+                    const parsedInput = createContactsInput(ctx.message.text);
 
-                    if (!validInput)
-                        ctx.reply('Пожалуйста, введите ваши контакты в следующем формате: <ФИО>, <Компания>, <Телефон>');
+                    if (!validateContactsInput(parsedInput))
+                        ctx.reply('Пожалуйста, введите ваши контакты в следующем формате: <ФИО>, <Компания>, <Телефон>.');
                     else {
                         ctx.reply('Спасибо за ваше сообщение, мы свяжемся с вами в самое ближайшее время!');
                         ctx.telegram.sendMessage(
                             parentChannel,
-                            `Пользователь <${validInput.name}> из компании <${validInput.company}> оставил контактный телефон <${validInput.phone}> ${new Date().toLocaleString()}.`
+                            `Пользователь [${parsedInput.name}] из компании [${parsedInput.company}] оставил контактный телефон [${parsedInput.phone}] ${new Date().toLocaleString()}.`
                         );
                         // Reset status to disable listener
                         ctx.session.status = 'READY';
@@ -113,10 +118,10 @@ async function setupBot(parentChatId: number) {
         // Start the bot and signla
         await bot.launch();
     } catch (error) {
-        console.error('Failed to start the bot: ', error);
+        console.error('Запуск бота провалился: ', error);
     }
 }
 
 // Parent chat id to send messages to
-const TARGET_CHAT_ID = -4171928290;
+const TARGET_CHAT_ID = -4137525849;
 setupBot(TARGET_CHAT_ID);

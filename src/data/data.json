@@ -23,17 +23,17 @@
             {
                 "id": "SELECT_EQUIPMENT_TYPE:01",
                 "label": "Гидравлическое оборудование",
-                "targetNodeId": "select_hydraulic_subtype"
+                "targetNodeId": "SELECT_HYDRAULIC_SUBTYPE"
             },
             {
                 "id": "SELECT_EQUIPMENT_TYPE:02",
                 "label": "Механические приводы",
-                "targetNodeId": "select_mechanic_subtype"
+                "targetNodeId": "SELECT_MECHANIC_SUBTYPE"
             },
             {
                 "id": "SELECT_EQUIPMENT_TYPE:03",
                 "label": "Электроника",
-                "targetNodeId": "select_electronics_subtype"
+                "targetNodeId": "SELECT_ELECTRONICS_SUBTYPE"
             }
         ]
     },
