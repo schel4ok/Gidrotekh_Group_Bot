@@ -123,5 +123,5 @@ async function setupBot(parentChatId: number) {
 }
 
 // Parent chat id to send messages to
-const TARGET_CHAT_ID = -4137525849;
+const TARGET_CHAT_ID = parseInt(process.env.PARENT_CHAT_ID ?? '');
 setupBot(TARGET_CHAT_ID);
