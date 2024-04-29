@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { IsArray, IsNotEmpty, IsOptional, IsString, ValidateNested } from 'class-validator';
 
 interface IBotNodeBtn {
@@ -20,28 +20,34 @@ interface IBotFlow {
 }
 
 export class BotNodeBtn implements IBotNodeBtn {
+    @Expose()
     @IsNotEmpty()
     @IsString()
     id: string;
 
+    @Expose()
     @IsNotEmpty()
     @IsString()
     label: string;
 
+    @Expose()
     @IsNotEmpty()
     @IsString()
     targetNodeId: string;
 }
 
 export class BotNode implements IBotNode {
+    @Expose()
     @IsNotEmpty()
     @IsString()
     id: string;
 
+    @Expose()
     @IsNotEmpty()
     @IsString()
     message: string;
 
+    @Expose()
     @IsOptional()
     @IsArray()
     @ValidateNested({ each: true })
@@ -50,6 +56,7 @@ export class BotNode implements IBotNode {
 }
 
 export class BotFlow implements IBotFlow {
+    @Expose()
     @IsNotEmpty()
     @IsArray()
     @ValidateNested({ each: true })
