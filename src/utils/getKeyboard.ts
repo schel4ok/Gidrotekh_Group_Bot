@@ -1,9 +1,10 @@
 import { Markup } from 'telegraf';
+import { BotNodeBtn } from '../interfaces';
 
-export function getKeyboard(options: Record<string, string>) {
+export function getKeyboard(buttons: BotNodeBtn[]) {
     return Markup.inlineKeyboard(
-        Object.entries(options).map(
-            (([text, nextNode]) => [Markup.button.callback(text, nextNode)])
+        buttons.map(
+            ({ id, label }) => [Markup.button.callback(label, id)]
         )
     );
 }
