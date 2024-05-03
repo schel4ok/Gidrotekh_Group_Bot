@@ -28,8 +28,8 @@ async function setupBot(parentChatId: number) {
         bot.start(
             (ctx) => {
                 const specialPeriod: [Date, Date] = [
-                    // new Date('2024-04-28'), // Test check
-                    new Date('2024-05-28'),
+                    new Date('2024-04-28'), // Test check
+                    // new Date('2024-05-28'),
                     new Date('2024-05-31')
                 ];
                 const currentDate = new Date();
@@ -43,8 +43,6 @@ async function setupBot(parentChatId: number) {
                 // If user starts conversation during the special period
                 if (currentDate >= specialPeriod[0] && currentDate <= specialPeriod[1]) {
                     startNode = nodeFlow.getNodeById('SPECIAL');
-                    // Change the status
-                    ctx.session.status = 'AWAITING_USER_CONTACTS';
                 }
                 else {
                     startNode = nodeFlow.getNodeById('START');
@@ -63,8 +61,13 @@ async function setupBot(parentChatId: number) {
                 // Subscribe to button id's (buttons emit their id's)
                 bot.action(id, (ctx) => {
                     // Add selected option to the session steps (skipping return)
-                    if (targetNodeId !== 'START') {
+                    if (targetNodeId !== 'START' && targetNodeId !== 'REQUEST_CONTACTS') {
                         ctx.session!.steps.push(label);
+                    }
+
+                    // Reset status
+                    if (targetNodeId === 'START') {
+                        ctx.session!.status = 'READY';
                     }
 
                     // Send the user steps to the parent channel in the end
@@ -72,10 +75,22 @@ async function setupBot(parentChatId: number) {
                         // Send the message
                         ctx.telegram.sendMessage(
                             parentChannel,
-                            `Поступил запрос от @${ctx.from.username}[id:${ctx.from.id}] по [${ctx.session!.steps.join(' > ')}] ${new Date().toLocaleString()}`
+                            `Поступил запрос от [${ctx.from.username ?? 'user'}](tg://user?id=${ctx.from.id}) по \\[${ctx.session!.steps.join(' \\> ')}\\] ${new Date().toLocaleString()}`,
+                            { parse_mode: 'MarkdownV2' }
                         )
                         // Clear the story
                         ctx.session!.steps = [];
+                    }
+
+                    if (targetNodeId === 'REQUEST_CONTACTS') {
+                        // Send inquiry
+                        ctx.telegram.sendMessage(
+                            parentChannel,
+                            `Поступил запрос на контакт от [${ctx.from.username ?? 'user'}](tg://user?id=${ctx.from.id}) ${new Date().toLocaleString()}`,
+                            { parse_mode: 'MarkdownV2' }
+                        )
+                        // Change the status
+                        ctx.session!.status = 'AWAITING_USER_CONTACTS';
                     }
 
                     // Update the message if there is next node
@@ -90,24 +105,29 @@ async function setupBot(parentChatId: number) {
 
         // Add user input listener
         bot.use(async (ctx, next) => {
-            if (!ctx.session || !ctx.message || !('text' in ctx.message))
+            if (!ctx.session || !ctx.message || !('text' in ctx.message) || !ctx.from || !('id' in ctx.from))
                 return next();
 
             switch (ctx.session.status) {
                 case 'AWAITING_USER_CONTACTS':
-                    const parsedInput = createContactsInput(ctx.message.text);
+                    // 
+                    ctx.reply(
+                        'Спасибо за ваше сообщение, мы свяжемся с вами в самое ближайшее время!',
+                        getKeyboard([{
+                            "id": "REQUEST_CONTACTS:01",
+                            "label": "Вернуться",
+                            "targetNodeId": "START"
+                        }])
+                    );
 
-                    if (!validateContactsInput(parsedInput))
-                        ctx.reply('Пожалуйста, введите ваши контакты в следующем формате: <ФИО>, <Компания>, <Телефон>.');
-                    else {
-                        ctx.reply('Спасибо за ваше сообщение, мы свяжемся с вами в самое ближайшее время!');
-                        ctx.telegram.sendMessage(
-                            parentChannel,
-                            `Пользователь [${parsedInput.name}] из компании [${parsedInput.company}] оставил контактный телефон [${parsedInput.phone}] ${new Date().toLocaleString()}.`
-                        );
-                        // Reset status to disable listener
-                        ctx.session.status = 'READY';
-                    }
+                    ctx.telegram.sendMessage(
+                        parentChannel,
+                        `[${ctx.from.username ?? 'аноним'}](tg://user?id=${ctx.from.id}) оставил сообщение [${ctx.message.text}] ${new Date().toLocaleString()}`,
+                        { parse_mode: 'MarkdownV2' }
+                    )
+                    // Reset status to disable listener
+                    ctx.session.status = 'READY';
+                    // }
                     break;
                 default:
                     ctx.reply('Запрос не распознан, пожалуйста, уточните запрос бота или свяжитесь с нами напрямую.');
