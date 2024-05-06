@@ -3,11 +3,8 @@ import path from 'path';
 import 'dotenv/config';
 import 'reflect-metadata'
 import LocalSession from 'telegraf-session-local';
-import { IBotWithSession, BotNode } from './interfaces';
-import { loadJsonData } from './utils/loadData';
-import { getKeyboard } from './utils/getKeyboard';
-import { validateNodeFlow } from './utils/validateNodes';
-import { createContactsInput, validateContactsInput } from './utils/validateConctacts';
+import { IBotWithSession, IBotSession, BotNode } from './interfaces';
+import { createContactsInput, getKeyboard, loadJsonData, validateCompany, validateName, validateNodeFlow, validatePhone } from './utils';
 
 // Initialize the bot
 const bot = new Telegraf<IBotWithSession>(process.env.TELEGRAM_TOKEN ?? 'badtoken');
@@ -24,6 +21,7 @@ async function setupBot(parentChatId: number) {
         const data = await loadJsonData(dataPath);
 
         const nodeFlow = await validateNodeFlow(data);
+        const defaultSession: IBotSession = { status: 'READY' as const, steps: [], contacts: createContactsInput() }
 
         bot.start(
             (ctx) => {
@@ -38,7 +36,7 @@ async function setupBot(parentChatId: number) {
                 let startNode: BotNode | undefined;
 
                 // Set initial session state
-                ctx.session = { status: 'READY', steps: [] };
+                ctx.session = defaultSession;
 
                 // If user starts conversation during the special period
                 if (currentDate >= specialPeriod[0] && currentDate <= specialPeriod[1]) {
@@ -61,13 +59,13 @@ async function setupBot(parentChatId: number) {
                 // Subscribe to button id's (buttons emit their id's)
                 bot.action(id, (ctx) => {
                     // Add selected option to the session steps (skipping return)
-                    if (targetNodeId !== 'START' && targetNodeId !== 'REQUEST_CONTACTS') {
+                    if (targetNodeId !== 'START') {
                         ctx.session!.steps.push(label);
                     }
 
-                    // Reset status
-                    if (targetNodeId === 'START') {
-                        ctx.session!.status = 'READY';
+                    // Reset session
+                    if (targetNodeId === 'START' || targetNodeId === 'SPECIAL') {
+                        ctx.session = defaultSession;
                     }
 
                     // Send the user steps to the parent channel in the end
@@ -86,11 +84,14 @@ async function setupBot(parentChatId: number) {
                         // Send inquiry
                         ctx.telegram.sendMessage(
                             parentChannel,
-                            `Поступил запрос на контакт от [${ctx.from.username ?? 'user'}](tg://user?id=${ctx.from.id}) ${new Date().toLocaleString()}`,
+                            `Поступил запрос с выставки СТТ от [${ctx.from.username ?? 'Аноним'}](tg://user?id=${ctx.from.id}) ${new Date().toLocaleString()}`,
                             { parse_mode: 'MarkdownV2' }
-                        )
-                        // Change the status
-                        ctx.session!.status = 'AWAITING_USER_CONTACTS';
+                        );
+                    }
+
+                    if (targetNodeId === 'REQUEST_NAME') {
+                        // Change the status and wait for the input
+                        ctx.session!.status = 'AWAITING_USER_NAME';
                     }
 
                     // Update the message if there is next node
@@ -109,26 +110,76 @@ async function setupBot(parentChatId: number) {
                 return next();
 
             switch (ctx.session.status) {
-                case 'AWAITING_USER_CONTACTS':
-                    // 
+                case 'AWAITING_USER_NAME':
+                    // Validate name
+                    if (!validateName(ctx.message.text)) {
+                        ctx.reply('Пожалуйста, не оставляйте поле пустым!');
+                        return next();
+                    }
+
+                    // Save user name
+                    ctx.session.contacts.name = ctx.message.text;
+
+                    // Send next query
                     ctx.reply(
-                        'Спасибо за ваше сообщение, мы свяжемся с вами в самое ближайшее время!',
-                        getKeyboard([{
-                            "id": "REQUEST_CONTACTS:01",
-                            "label": "Вернуться",
-                            "targetNodeId": "START"
-                        }])
+                        nodeFlow.getNodeById('REQUEST_COMPANY')?.message ?? 'Следующий вопрос'
                     );
 
+                    // Change state
+                    ctx.session.status = 'AWAITING_USER_COMPANY';
+
+                    break;
+
+                case 'AWAITING_USER_COMPANY':
+                    // Validate company
+                    if (!validateCompany(ctx.message.text)) {
+                        ctx.reply('Пожалуйста, не оставляйте поле пустым!');
+                        return next();
+                    }
+
+                    // Save user company
+                    ctx.session.contacts.company = ctx.message.text ?? 'Не указано';
+
+                    // Send next query
+                    ctx.reply(
+                        nodeFlow.getNodeById('REQUEST_PHONE')?.message ?? 'Следующий вопрос'
+                    );
+
+                    // Change state
+                    ctx.session.status = 'AWAITING_USER_PHONE';
+
+                    break;
+
+                case 'AWAITING_USER_PHONE':
+                    // Validate phone
+                    if (!validatePhone(ctx.message.text)) {
+                        ctx.reply('Пожалуйста, укажите корректный номер телефона!');
+                        return next();
+                    }
+
+                    // Save user phone
+                    ctx.session.contacts.phone = ctx.message.text ?? 'Не указано';
+
+                    // Send user data to the parent group
                     ctx.telegram.sendMessage(
                         parentChannel,
-                        `[${ctx.from.username ?? 'аноним'}](tg://user?id=${ctx.from.id}) оставил сообщение [${ctx.message.text}] ${new Date().toLocaleString()}`,
+                        `Участник выставки СТТ [${ctx.from.username ?? 'аноним'}](tg://user?id=${ctx.from.id}) предоставил контактную информацию [ФИО: ${ctx.session.contacts.name}, Компания: ${ctx.session.contacts.company}, Телефон: ${ctx.session.contacts.phone.replace(/\+/g, '\\+')}] ${new Date().toLocaleString()}`,
                         { parse_mode: 'MarkdownV2' }
                     )
-                    // Reset status to disable listener
+
+                    // Send confirmation message to the user
+                    const thankyouNode = nodeFlow.getNodeById('THANK_YOU');
+                    ctx.reply(
+                        thankyouNode?.message
+                        ?? 'Спасибо за ваше сообщение, мы свяжемся с вами в самое ближайшее время!',
+                        thankyouNode && thankyouNode.buttons ? getKeyboard(thankyouNode.buttons) : undefined
+                    );
+
+                    // Change state
                     ctx.session.status = 'READY';
-                    // }
+
                     break;
+
                 default:
                     ctx.reply('Запрос не распознан, пожалуйста, уточните запрос бота или свяжитесь с нами напрямую.');
             }
