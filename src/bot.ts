@@ -1,28 +1,34 @@
 import { Telegraf } from 'telegraf';
+import RedisSession from 'telegraf-session-redis';
 import path from 'path';
 import 'dotenv/config';
 import 'reflect-metadata'
-import LocalSession from 'telegraf-session-local';
 import { IBotWithSession, IBotSession, BotNode } from './interfaces';
-import { createContactsInput, getKeyboard, loadJsonData, validateCompany, validateName, validateNodeFlow, validatePhone } from './utils';
-import { sessionOptions } from './utils/storageConfig';
+import {
+    createContactsInput,
+    getKeyboard,
+    loadJsonData,
+    validateCompany,
+    validateName,
+    validateNodeFlow,
+    validatePhone
+} from './utils';
 
 // Initialize the bot
 const bot = new Telegraf<IBotWithSession>(process.env.TELEGRAM_TOKEN ?? 'badtoken');
 
+// Create a redis session
+const redisSession = new RedisSession({
+    store: {
+        host: '127.0.0.1',
+        port: 6379,
+    },
+});
+
 // Enable session support
-const localSession = new LocalSession(sessionOptions);
-bot.use(localSession.middleware());
+bot.use(redisSession.middleware());
 
-// Session init
-bot.use((ctx, next) => {
-    const sessionKey = sessionOptions.getSessionKey!(ctx);
-    console.log('Session init middleware fired!');
-    console.log(`Session key: ${sessionKey}`);
-    console.log(`Initial session data: ${JSON.stringify(ctx.session)}`);
-    return next();
-})
-
+// Setup the bot
 async function setupBot(parentChatId: number) {
     try {
         const parentChannel = parentChatId;
@@ -33,10 +39,11 @@ async function setupBot(parentChatId: number) {
         const nodeFlow = await validateNodeFlow(data);
         const defaultSession: IBotSession = { status: 'READY' as const, steps: [], contacts: createContactsInput() }
 
+        // Start message handler
         bot.start(
             (ctx) => {
                 const specialPeriod: [Date, Date] = [
-                    new Date('2024-04-28'),
+                    new Date('2024-05-28'),
                     new Date('2024-05-31')
                 ];
                 const currentDate = new Date();
@@ -62,13 +69,11 @@ async function setupBot(parentChatId: number) {
                 ctx.reply(startNode.message, startNode.buttons ? getKeyboard(startNode.buttons) : undefined);
             });
 
-        // SETUP BTN CALLBACK LISTENERS
+        // Setup btn callback listeners
         nodeFlow.getAllBtns().forEach(
             ({ id, label, targetNodeId }) => {
                 // Subscribe to button id's (buttons emit their id's)
                 bot.action(id, (ctx) => {
-                    console.log(`User ${ctx.from.id} pressed button ${label}`);
-
                     // Add selected option to the session steps (skipping return)
                     if (targetNodeId !== 'START') {
                         ctx.session!.steps.push(label);
@@ -84,19 +89,19 @@ async function setupBot(parentChatId: number) {
                         // Send the message
                         ctx.telegram.sendMessage(
                             parentChannel,
-                            `Поступил запрос от <a href="tg://user?id=${ctx.from.id}">${ctx.from.username ?? 'user'}</a> по ${ctx.session!.steps.join(' > ')} ${new Date().toLocaleString()}`,
+                            `Поступил запрос от [<a href="tg://user?id=${ctx.from.id}">${ctx.from.username ?? 'user'}</a>] по [${ctx.session!.steps.join(' > ')}] ${new Date().toLocaleString()}`,
                             { parse_mode: 'HTML' }
                         )
+
                         // Clear the story
-                        // ctx.session!.steps = [];                    DELETE
-                        ctx.session = { ...defaultSession }
+                        ctx.session = { ...defaultSession };
                     }
 
                     if (targetNodeId === 'REQUEST_CONTACTS') {
                         // Send inquiry
                         ctx.telegram.sendMessage(
                             parentChannel,
-                            `Поступил запрос с выставки СТТ от <a href="tg://user?id=${ctx.from.id}">${ctx.from.username ?? 'Аноним'}</a> ${new Date().toLocaleString()}`,
+                            `Поступил запрос с выставки СТТ от [<a href="tg://user?id=${ctx.from.id}">${ctx.from.username ?? 'Аноним'}</a>] ${new Date().toLocaleString()}`,
                             { parse_mode: 'HTML' }
                         );
                     }
@@ -118,14 +123,8 @@ async function setupBot(parentChatId: number) {
 
         // Add user input listener
         bot.use(async (ctx, next) => {
-            // DELETE
-            console.log(`SESSION KEY: ${sessionOptions.getSessionKey!(ctx)}`);
-
             if (!ctx.session || !ctx.message || !('text' in ctx.message) || !ctx.from || !('id' in ctx.from))
                 return next();
-
-            console.log(`User ${ctx.from.id} sent message: ${ctx.message.text}`);
-            console.log(`Current session: `, JSON.stringify(ctx.session));
 
             switch (ctx.session.status) {
                 case 'AWAITING_USER_NAME':
@@ -178,12 +177,10 @@ async function setupBot(parentChatId: number) {
                     // Save user phone
                     ctx.session.contacts.phone = ctx.message.text ?? 'Не указано';
 
-                    console.log(`Final session data for user ${ctx.from.id}: `, ctx.session);
-
                     // Send user data to the parent group
                     ctx.telegram.sendMessage(
                         parentChannel,
-                        `Участник выставки СТТ <a href="tg://user?id=${ctx.from.id}">${ctx.from.username ?? 'аноним'}</a> предоставил контактную информацию [ФИО: ${ctx.session.contacts.name}, Компания: ${ctx.session.contacts.company}, Телефон: ${ctx.session.contacts.phone}] ${new Date().toLocaleString()}`,
+                        `Участник выставки СТТ [<a href="tg://user?id=${ctx.from.id}">${ctx.from.username ?? 'аноним'}</a>] предоставил контактную информацию [ФИО: ${ctx.session.contacts.name}, Компания: ${ctx.session.contacts.company}, Телефон: ${ctx.session.contacts.phone}] ${new Date().toLocaleString()}`,
                         { parse_mode: 'HTML' }
                     )
 
@@ -196,15 +193,8 @@ async function setupBot(parentChatId: number) {
                     );
 
                     // Change state
-                    // ctx.session.status = 'READY';            DELETE
-                    console.log(ctx.session);
-                    console.log('Reseting session!');
-                    // ctx.session = { ...defaultSession };
-                    ctx.session = null;
                     ctx.session = { ...defaultSession };
 
-                    console.log(ctx.session);
-                    ctx
                     break;
 
                 default:
