@@ -8,5 +8,5 @@ export interface IBotSession {
 }
 
 export interface IBotWithSession extends Context {
-    session?: IBotSession;
+    session?: IBotSession | null;
 }
