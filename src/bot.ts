@@ -20,8 +20,8 @@ const bot = new Telegraf<IBotWithSession>(process.env.TELEGRAM_TOKEN ?? 'badtoke
 // Create a redis session
 const redisSession = new RedisSession({
     store: {
-        host: '127.0.0.1',
-        port: 6379,
+        host: process.env.REDIS_HOST || 'localhost',
+        port: parseInt(process.env.REDIS_PORT ?? '0', 10) || 6379,
     },
 });
 
