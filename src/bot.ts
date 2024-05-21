@@ -1,4 +1,4 @@
-import { Telegraf } from 'telegraf';
+import { Context, Telegraf } from 'telegraf';
 import RedisSession from 'telegraf-session-redis';
 import path from 'path';
 import 'dotenv/config';
@@ -74,6 +74,13 @@ async function setupBot(parentChatId: number) {
             ({ id, label, targetNodeId }) => {
                 // Subscribe to button id's (buttons emit their id's)
                 bot.action(id, (ctx) => {
+                    // Handle missing session
+                    if (!ctx.session
+                        || !ctx.session.status
+                        || !ctx.session.contacts
+                        || !ctx.session.status
+                    ) ctx.session = { ...defaultSession };
+
                     // Add selected option to the session steps (skipping return)
                     if (targetNodeId !== 'START') {
                         ctx.session!.steps.push(label);
